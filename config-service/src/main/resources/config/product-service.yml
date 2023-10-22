@@ -1,0 +1,50 @@
+server:
+  port: 0
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8061/eureka/
+      
+logging:
+  pattern: 
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId:-},%X{spanId:-}] ${LOG_LEVEL_PATTERN:-%5p} %m%n"
+  level:
+    io.github.resilience4j: DEBUG
+
+springdoc:
+  packagesToScan: capstone.services.product
+
+spring:
+  output:
+    ansi:
+      enabled: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      productCircuitBreaker:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 60
+        minimumNumber0fCalls: 5 # minimum number of calls that need to be made before the Circuit Breaker starts calculating the failure rate. This prevents the Circuit Breaker from opening prematurely.
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 20s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        recordExceptions:
+          - capstone.services.product.exception.RestApiServerException
+          - feign.RetryableException
